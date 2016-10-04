@@ -3,7 +3,7 @@ title=Tern
 desc=Intelligent JavaScript tooling
 type=cudatext-plugin
 subdir=cuda_tern
-homepage=https://github.com/kvichans/cuda_tern
+homepage=https://github.com/pohmelie/cuda_tern
 
 [item1]
 section=events
@@ -15,4 +15,3 @@ lexers=JavaScript
 ;caption=Configure SnipToCall...
 ;method=dlg
 ;menu=0
-
