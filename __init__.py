@@ -3,6 +3,7 @@ import re
 import urllib.request
 import json
 import collections
+import functools
 
 from cudatext import *
 import cudatext_cmd
@@ -25,17 +26,51 @@ else:
     ...
 
 
+Caret = collections.namedtuple("Caret", "sx sy ex ey")
+
+
+def normalize_caret(sx, sy, ex, ey):
+
+    if ex == -1:
+
+        ex, ey = sx, sy
+
+    return Caret(ex, ey, sx, sy)
+
+
+def prevent_multiply_carrets(f):
+
+    @functools.wraps(f)
+    def wrapped(self, ed_self):
+
+        if len(ed_self.get_carets()) == 1:
+
+            return f(self, ed_self)
+
+    return wrapped
+
+
+def unpack_editor_info(f):
+
+    @functools.wraps(f)
+    def wrapped(self, ed_self):
+
+        caret, *_ = ed_self.get_carets()
+        filename = ed_self.get_filename()
+        text = ed_self.get_text_all()
+        return f(self, ed_self, filename, text, normalize_caret(*caret))
+
+    return wrapped
+
+
 class Command:
 
-    def on_complete(self, ed_self):
+    @prevent_multiply_carrets
+    @unpack_editor_info
+    def on_complete(self, ed_self, filename, text, caret):
 
-        carets = (sx, sy, ex, ey), *_ = ed_self.get_carets()
-        if len(carets) > 1 or ex != -1:
-
-            return
-
-        result = self.complete(ed_self)
-        if not result or not result.get("completions", None):
+        result = self.complete(filename, text, caret)
+        if not result:
 
             return
 
@@ -48,36 +83,68 @@ class Command:
 
             lines.append(str.format(fmt, **complete))
 
-        ed_self.complete(str.join("\n", lines), sx - lx, rx - sx)
+        ed_self.complete(str.join("\n", lines), caret.ex - lx, rx - caret.ex)
         return True
 
-    def on_goto_def(self, ed_self):
+    @prevent_multiply_carrets
+    @unpack_editor_info
+    def on_goto_def(self, ed_self, filename, text, caret):
+
+        result = self.definition(filename, text, caret)
+        if not result:
+
+            return
+
+        x, y = result["start"]["ch"], result["start"]["line"]
+        ed_self.set_caret(x, y)
+
+    @prevent_multiply_carrets
+    @unpack_editor_info
+    def on_func_hint(self, ed_self, filename, text, caret):
 
         ...
 
-    def on_func_hint(self, ed_self):
+    def complete(self, filename, text, caret):
 
-        ...
-
-    def complete(self, ed_self):
-
-        (sx, sy, ex, ey), *_ = ed_self.get_carets()
         return self.request(dict(
             files=[dict(
                 type="full",
-                name=ed_self.get_filename(),
-                text=ed_self.get_text_all(),
+                name=filename,
+                text=text,
             )],
             query=dict(
                 type="completions",
-                file=ed_self.get_filename(),
+                file=filename,
                 end=dict(
-                    line=sy,
-                    ch=sx,
+                    line=caret.ey,
+                    ch=caret.ex,
                 ),
                 lineCharPositions=True,
                 types=True,
                 docs=True,
+            ),
+        ))
+
+    def definition(self, filename, text, caret):
+
+        return self.request(dict(
+            files=[dict(
+                type="full",
+                name=filename,
+                text=text,
+            )],
+            query=dict(
+                type="definition",
+                file=filename,
+                end=dict(
+                    line=caret.ey,
+                    ch=caret.ex,
+                ),
+                start=dict(
+                    line=caret.sy,
+                    ch=caret.sx,
+                ),
+                lineCharPositions=True,
             ),
         ))
 
