@@ -4,6 +4,7 @@ import urllib.request
 import json
 import collections
 import functools
+import itertools
 
 from cudatext import *
 import cudatext_cmd
@@ -102,7 +103,47 @@ class Command:
     @unpack_editor_info
     def on_func_hint(self, ed_self, filename, text, caret):
 
-        ...
+        tokens = collections.deque()
+        for i in itertools.count():
+
+            token = ed_self.get_token(TOKEN_INDEX, i, 0)
+            (sx, sy), (ex, ey), *_ = token
+            tokens.append(token)
+            if caret.sy == sy and sx <= caret.sx <= ex:
+
+                break
+
+        depth = 1
+        while tokens:
+
+            (sx, sy), (ex, ey), s, token_type = tokens.pop()
+            if token_type == "Symbol":
+
+                if s == "(":
+
+                    depth -= 1
+
+                elif s == ")":
+
+                    depth += 1
+
+            elif token_type == "Identifier" and depth == 0:
+
+                break
+
+        else:
+
+            return
+
+        result = self.hint(filename, text, Caret(sx, sy, ex, ey))
+        if "name" in result:
+
+            hint = result["type"]
+            if hint.startswith("fn("):
+
+                hint = result["name"] + hint[2:]
+
+            msg_status_alt(hint, 10)
 
     def complete(self, filename, text, caret):
 
@@ -145,6 +186,30 @@ class Command:
                     ch=caret.sx,
                 ),
                 lineCharPositions=True,
+            ),
+        ))
+
+    def hint(self, filename, text, caret):
+
+        return self.request(dict(
+            files=[dict(
+                type="full",
+                name=filename,
+                text=text,
+            )],
+            query=dict(
+                type="type",
+                file=filename,
+                end=dict(
+                    line=caret.ey,
+                    ch=caret.ex,
+                ),
+                start=dict(
+                    line=caret.sy,
+                    ch=caret.sx,
+                ),
+                lineCharPositions=True,
+                preferFunction=True,
             ),
         ))
 
