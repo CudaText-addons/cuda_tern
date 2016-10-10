@@ -113,6 +113,10 @@ class Command:
 
                 break
 
+            if (caret.ey, caret.ex) < (sy, sx):
+
+                return
+
         depth = 1
         while tokens:
 
