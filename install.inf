@@ -1,6 +1,6 @@
 [info]
 title=CudaTern
-desc=Gives intelligence commands for JavaScript: auto-complete (Ctrl+Space), go-to-definition (item in context menu)
+desc=Gives intelligence commands for JavaScript: auto-complete (Ctrl+Space), go-to-definition (item in context menu). Based on Tern engine, requires Node.js.
 type=cudatext-plugin
 subdir=cuda_tern
 homepage=https://github.com/pohmelie/cuda_tern
