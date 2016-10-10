@@ -1,6 +1,6 @@
 [info]
-title=Tern
-desc=Intelligent JavaScript tooling
+title=CudaTern
+desc=Gives intelligence commands for JavaScript: auto-complete (Ctrl+Space), go-to-definition (item in context menu)
 type=cudatext-plugin
 subdir=cuda_tern
 homepage=https://github.com/pohmelie/cuda_tern
@@ -9,9 +9,3 @@ homepage=https://github.com/pohmelie/cuda_tern
 section=events
 events=on_complete,on_goto_def,on_func_hint
 lexers=JavaScript
-
-;[item10]
-;section=commands
-;caption=Configure SnipToCall...
-;method=dlg
-;menu=0
