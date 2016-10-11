@@ -1,3 +1,4 @@
+import os
 import subprocess
 import re
 import urllib.request
@@ -13,6 +14,7 @@ import cudatext_cmd
 CUDA_LEXER_SYMBOL = "Symbol"
 CUDA_LEXER_IDENTIFIER = "Identifier"
 
+LOCALHOST = "127.0.0.1" if os.name=='nt' else "localhost"
 
 TERN_PROCESS = subprocess.Popen(
     ("tern", "--persistent", "--ignore-stdin", "--no-port-file"),
@@ -224,7 +226,7 @@ class Command:
     def request(self, data):
 
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        url = str.format("http://127.0.0.1:{}/", PORT)
+        url = str.format("http://{}:{}/", LOCALHOST, PORT)
         s = json.dumps(data).encode("utf-8")
         req = opener.open(url, s, 1)
         return json.loads(req.read().decode("utf-8"))
