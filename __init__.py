@@ -123,6 +123,28 @@ def unpack_editor_info(f):
     return wrapped
 
 
+def is_wordchar(s):
+
+    return (s=='_') or s.isalnum()
+
+def get_word_lens():
+    """ Gets count of word-chars to left/right of caret
+    """
+
+    x0, y0, x1, y1 = ed.get_carets()[0]
+    line = ed.get_text_line(y0)
+    
+    x = x0
+    while x>0 and is_wordchar(line[x-1]): x -= 1
+    len1 = x0-x
+
+    x = x0
+    while x<len(line) and is_wordchar(line[x]): x += 1
+    len2 = x-x0
+
+    return (len1, len2)
+
+
 class Command:
 
     @prevent_multiply_carrets
@@ -134,8 +156,11 @@ class Command:
 
             return
 
-        lx = result["start"]["ch"]
-        rx = result["end"]["ch"]
+        par_len1, par_len2 = get_word_lens()
+        if par_len1 <= 0:
+        
+            return True
+
         lines = []
         default = collections.ChainMap(dict(type="", name="", doc=""))
         
@@ -149,8 +174,6 @@ class Command:
             lines.append(str.format(fmt, **complete))
 
         par_text = str.join("\n", lines)
-        par_len1 = caret.ex - lx
-        par_len2 = rx - caret.ex
         
         if CUDA_API_COMPLETE_NEW:
             ed_self.complete(par_text, par_len1, par_len2, 0, True)
