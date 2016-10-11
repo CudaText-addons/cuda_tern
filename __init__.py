@@ -17,22 +17,49 @@ CUDA_LEXER_IDENTIFIER = "Identifier"
 LOCALHOST = "127.0.0.1" if os.name=='nt' else "localhost"
 
 TERN_TIMEOUT = 3 #seconds
-TERN_PROCESS = subprocess.Popen(
-    ("tern", "--persistent", "--ignore-stdin", "--no-port-file"),
-    stdout=subprocess.PIPE,
-)
+TERN_PROCESS = None
+TERN_PORT = None
 
-s = TERN_PROCESS.stdout.readline().decode("utf-8")
-match = re.match("Listening on port (\\d+)", s)
-if match:
 
-    PORT = int(match.group(1))
+def do_start_server():
 
-else:
+    global TERN_PROCESS
+    global TERN_PORT
+    
+    try:
+        TERN_PROCESS = subprocess.Popen(
+            ("tern", "--persistent", "--ignore-stdin", "--no-port-file"),
+            stdout=subprocess.PIPE,
+        )
+    except:
+        msg_box('Cannot start Tern process.\nMake sure Tern.js and Node.js are installed.', MB_OK+MB_ICONERROR)
+        return
 
-    PORT = None
-    ...
+    s = TERN_PROCESS.stdout.readline().decode("utf-8")
+    match = re.match("Listening on port (\\d+)", s)
+    if match:
 
+        TERN_PORT = int(match.group(1))
+
+    print('Started Tern (port %d)' % TERN_PORT)
+    
+
+def do_request(data):
+    
+    global TERN_PORT
+    global TERN_TIMEOUT
+        
+    if not TERN_PORT:
+        return
+
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    url = str.format("http://{}:{}/", LOCALHOST, TERN_PORT)
+    s = json.dumps(data).encode("utf-8")
+    req = opener.open(url, s, timeout=TERN_TIMEOUT)
+    return json.loads(req.read().decode("utf-8"))
+
+
+do_start_server()
 
 Caret = collections.namedtuple("Caret", "sx sy ex ey")
 
@@ -105,6 +132,7 @@ class Command:
 
         x, y = result["start"]["ch"], result["start"]["line"]
         ed_self.set_caret(x, y)
+        return True
 
     @prevent_multiply_carrets
     @unpack_editor_info
@@ -162,7 +190,7 @@ class Command:
 
     def get_completes(self, filename, text, caret):
 
-        return self.request(dict(
+        return do_request(dict(
             files=[dict(
                 type="full",
                 name=filename,
@@ -183,7 +211,7 @@ class Command:
 
     def get_definition(self, filename, text, caret):
 
-        return self.request(dict(
+        return do_request(dict(
             files=[dict(
                 type="full",
                 name=filename,
@@ -206,7 +234,7 @@ class Command:
 
     def get_calltip(self, filename, text, caret):
 
-        return self.request(dict(
+        return do_request(dict(
             files=[dict(
                 type="full",
                 name=filename,
@@ -228,10 +256,3 @@ class Command:
             ),
         ))
 
-    def request(self, data):
-
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        url = str.format("http://{}:{}/", LOCALHOST, PORT)
-        s = json.dumps(data).encode("utf-8")
-        req = opener.open(url, s, timeout=TERN_TIMEOUT)
-        return json.loads(req.read().decode("utf-8"))
