@@ -68,12 +68,12 @@ def do_goto_file(filename, num_line, num_col):
     if not filename:
         return
 
+    print('Goto params: "%s", %d:%d' % (filename, num_line, num_col))
+
     # Tern gives "test/reload.js" while we edit "reload.js" in "test"
     dirname = os.path.dirname(os.path.dirname(ed.get_filename()))
     if dirname:
         filename = os.path.join(dirname, filename)
-
-    print('Goto params:', filename, num_line, num_col)
 
     if not os.path.isfile(filename):
         return
@@ -82,7 +82,7 @@ def do_goto_file(filename, num_line, num_col):
     ed.set_prop(PROP_LINE_TOP, str(max(0, num_line - LINE_GOTO_OFFSET)))
     ed.set_caret(num_col, num_line)
 
-    msg_status('Go to file: ' + filename)
+    msg_status('Goto file: ' + filename)
     print('Go to "%s", Line %d' % (filename, num_line + 1))
 
 
@@ -100,29 +100,15 @@ def normalize_caret(sx, sy, ex, ey):
     return Caret(ex, ey, sx, sy)
 
 
-def prevent_multiply_carrets(f):
+def get_params():
 
-    @functools.wraps(f)
-    def wrapped(self, ed_self):
+    carets = ed.get_carets()
+    if len(carets) != 1:
+        return
 
-        if len(ed_self.get_carets()) == 1:
-
-            return f(self, ed_self)
-
-    return wrapped
-
-
-def unpack_editor_info(f):
-
-    @functools.wraps(f)
-    def wrapped(self, ed_self):
-
-        caret, *_ = ed_self.get_carets()
-        filename = ed_self.get_filename()
-        text = ed_self.get_text_all()
-        return f(self, ed_self, filename, text, normalize_caret(*caret))
-
-    return wrapped
+    filename = ed.get_filename()
+    text = ed.get_text_all()
+    return (filename, text, normalize_caret(*carets[0]))
 
 
 def is_wordchar(s):
@@ -152,11 +138,13 @@ def get_word_lens():
 
 class Command:
 
-    @prevent_multiply_carrets
-    @unpack_editor_info
-    def on_complete(self, ed_self, filename, text, caret):
+    def on_complete(self, ed_self):
 
-        result = self.get_completes(filename, text, caret)
+        params = get_params()
+        if not params:
+            return
+
+        result = self.get_completes(*params)
         if not result:
 
             return
@@ -187,11 +175,13 @@ class Command:
 
         return True
 
-    @prevent_multiply_carrets
-    @unpack_editor_info
-    def on_goto_def(self, ed_self, filename, text, caret):
+    def on_goto_def(self, ed_self):
 
-        result = self.get_definition(filename, text, caret)
+        params = get_params()
+        if not params:
+            return True
+
+        result = self.get_definition(*params)
         if result:
             do_goto_file(
                 result.get("file", ''),
@@ -200,9 +190,14 @@ class Command:
             )
         return True
 
-    @prevent_multiply_carrets
-    @unpack_editor_info
-    def on_func_hint(self, ed_self, filename, text, caret):
+
+    def on_func_hint(self, ed_self):
+    
+        params = get_params()
+        if not params:
+            return
+            
+        filename, text, caret = params
 
         tokens = collections.deque()
         for i in itertools.count():
