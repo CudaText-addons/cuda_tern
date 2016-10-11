@@ -254,6 +254,28 @@ class Command:
 
             msg_status_alt(hint, 10)
 
+    def show_usages(self):
+
+        if len(ed.get_carets()) == 1:
+
+            caret, *_ = ed.get_carets()
+            filename = ed.get_filename()
+            text = ed.get_text_all()
+            try:
+
+                result = self.get_references(
+                    filename,
+                    text,
+                    normalize_caret(*caret),
+                )
+
+            except urllib.error.HTTPError:
+
+                raise
+                # return
+
+            print(result)
+
     def get_completes(self, filename, text, caret):
 
         return do_request(dict(
@@ -320,5 +342,29 @@ class Command:
                 ),
                 lineCharPositions=True,
                 preferFunction=True,
+            ),
+        ))
+
+    def get_references(self, filename, text, caret):
+
+        return do_request(dict(
+            files=[dict(
+                type="full",
+                name=filename,
+                text=text,
+            )],
+            query=dict(
+                type="refs",
+                file=filename,
+                end=dict(
+                    line=caret.ey,
+                    ch=caret.ex,
+                ),
+                start=dict(
+                    line=caret.sy,
+                    ch=caret.sx,
+                ),
+                lineCharPositions=True,
+                expandWordForward=False,  # need when caret inside funcname
             ),
         ))

@@ -9,3 +9,8 @@ homepage=https://github.com/pohmelie/cuda_tern
 section=events
 events=on_complete,on_goto_def,on_func_hint
 lexers=JavaScript
+
+[item2]
+section=commands
+caption=Tern\Show usages
+method=show_usages
