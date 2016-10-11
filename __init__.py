@@ -261,19 +261,16 @@ class Command:
             caret, *_ = ed.get_carets()
             filename = ed.get_filename()
             text = ed.get_text_all()
-            try:
+            par_len1, par_len2 = get_word_lens()
+            if par_len1 + par_len2 == 0:
 
-                result = self.get_references(
-                    filename,
-                    text,
-                    normalize_caret(*caret),
-                )
+                return
 
-            except urllib.error.HTTPError:
-
-                raise
-                # return
-
+            result = self.get_references(
+                filename,
+                text,
+                normalize_caret(*caret),
+            )
             print(result)
 
     def get_completes(self, filename, text, caret):
