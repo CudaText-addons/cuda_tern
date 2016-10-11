@@ -16,6 +16,7 @@ CUDA_LEXER_IDENTIFIER = "Identifier"
 
 LOCALHOST = "127.0.0.1" if os.name=='nt' else "localhost"
 
+TERN_TIMEOUT = 3 #seconds
 TERN_PROCESS = subprocess.Popen(
     ("tern", "--persistent", "--ignore-stdin", "--no-port-file"),
     stdout=subprocess.PIPE,
@@ -76,7 +77,7 @@ class Command:
     @unpack_editor_info
     def on_complete(self, ed_self, filename, text, caret):
 
-        result = self.complete(filename, text, caret)
+        result = self.get_completes(filename, text, caret)
         if not result:
 
             return
@@ -97,7 +98,7 @@ class Command:
     @unpack_editor_info
     def on_goto_def(self, ed_self, filename, text, caret):
 
-        result = self.definition(filename, text, caret)
+        result = self.get_definition(filename, text, caret)
         if not result:
 
             return
@@ -113,6 +114,10 @@ class Command:
         for i in itertools.count():
 
             token = ed_self.get_token(TOKEN_INDEX, i, 0)
+            if token is None:
+            
+                break
+            
             (sx, sy), (ex, ey), *_ = token
             tokens.append(token)
             if caret.sy == sy and sx <= caret.sx <= ex:
@@ -155,7 +160,7 @@ class Command:
 
             msg_status_alt(hint, 10)
 
-    def complete(self, filename, text, caret):
+    def get_completes(self, filename, text, caret):
 
         return self.request(dict(
             files=[dict(
@@ -176,7 +181,7 @@ class Command:
             ),
         ))
 
-    def definition(self, filename, text, caret):
+    def get_definition(self, filename, text, caret):
 
         return self.request(dict(
             files=[dict(
@@ -228,5 +233,5 @@ class Command:
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         url = str.format("http://{}:{}/", LOCALHOST, PORT)
         s = json.dumps(data).encode("utf-8")
-        req = opener.open(url, s, 1)
+        req = opener.open(url, s, timeout=TERN_TIMEOUT)
         return json.loads(req.read().decode("utf-8"))
