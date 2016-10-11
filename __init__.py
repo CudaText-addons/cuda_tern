@@ -1,10 +1,9 @@
 import os
-import subprocess
 import re
-import urllib.request
 import json
+import subprocess
+import urllib.request
 import collections
-import functools
 import itertools
 
 from cudatext import *
