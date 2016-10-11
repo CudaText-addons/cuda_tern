@@ -10,6 +10,10 @@ from cudatext import *
 import cudatext_cmd
 
 
+CUDA_LEXER_SYMBOL = "Symbol"
+CUDA_LEXER_IDENTIFIER = "Identifier"
+
+
 TERN_PROCESS = subprocess.Popen(
     ("tern", "--persistent", "--ignore-stdin", "--no-port-file"),
     stdout=subprocess.PIPE,
@@ -121,7 +125,7 @@ class Command:
         while tokens:
 
             (sx, sy), (ex, ey), s, token_type = tokens.pop()
-            if token_type == "Symbol":
+            if token_type == CUDA_LEXER_SYMBOL:
 
                 if s == "(":
 
@@ -131,7 +135,7 @@ class Command:
 
                     depth += 1
 
-            elif token_type == "Identifier" and depth == 0:
+            elif token_type == CUDA_LEXER_IDENTIFIER and depth == 0:
 
                 break
 
@@ -139,7 +143,7 @@ class Command:
 
             return
 
-        result = self.hint(filename, text, Caret(sx, sy, ex, ey))
+        result = self.get_calltip(filename, text, Caret(sx, sy, ex, ey))
         if "name" in result:
 
             hint = result["type"]
@@ -193,7 +197,7 @@ class Command:
             ),
         ))
 
-    def hint(self, filename, text, caret):
+    def get_calltip(self, filename, text, caret):
 
         return self.request(dict(
             files=[dict(
