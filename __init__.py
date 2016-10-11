@@ -356,6 +356,5 @@ class Command:
                     ch=caret.sx,
                 ),
                 lineCharPositions=True,
-                expandWordForward=False,  # need when caret inside funcname
             ),
         ))
