@@ -62,6 +62,16 @@ def do_request(data):
 
 def do_goto_file(filename, num_line, num_col):
 
+    if not filename:
+        return
+        
+    #Tern gives "test/reload.js" while we edit "reload.js" in "test"
+    dirname = os.path.dirname(os.path.dirname(ed.get_filename()))
+    if dirname:
+        filename = os.path.join(dirname, filename)
+        
+    print('Goto params:', filename, num_line, num_col)
+    
     if not os.path.isfile(filename):
         return
 
@@ -142,9 +152,9 @@ class Command:
         result = self.get_definition(filename, text, caret)
         if result:
             do_goto_file(
-                result["file"], 
-                result["start"]["line"], 
-                result["start"]["ch"],
+                result.get("file", ''), 
+                result.get("start", {}).get("line", 0), 
+                result.get("start", {}).get("ch", 0),
             )        
         return True
 
