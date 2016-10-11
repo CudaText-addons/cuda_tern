@@ -15,6 +15,7 @@ CUDA_LEXER_SYMBOL = "Symbol"
 CUDA_LEXER_IDENTIFIER = "Identifier"
 
 LOCALHOST = "127.0.0.1" if os.name=='nt' else "localhost"
+LINE_GOTO_OFFSET = 5 #lines from top
 
 TERN_TIMEOUT = 3 #seconds
 TERN_PROCESS = None
@@ -57,6 +58,19 @@ def do_request(data):
     s = json.dumps(data).encode("utf-8")
     req = opener.open(url, s, timeout=TERN_TIMEOUT)
     return json.loads(req.read().decode("utf-8"))
+
+
+def do_goto_file(filename, num_line, num_col):
+
+    if not os.path.isfile(filename):
+        return
+
+    file_open(filename)
+    ed.set_prop(PROP_LINE_TOP, str(max(0, num_line-LINE_GOTO_OFFSET)))
+    ed.set_caret(num_col, num_line)
+
+    msg_status('Go to file: '+filename)
+    print('Go to "%s", Line %d' % (filename, num_line+1))
 
 
 do_start_server()
@@ -126,12 +140,12 @@ class Command:
     def on_goto_def(self, ed_self, filename, text, caret):
 
         result = self.get_definition(filename, text, caret)
-        if not result:
-
-            return
-
-        x, y = result["start"]["ch"], result["start"]["line"]
-        ed_self.set_caret(x, y)
+        if result:
+            do_goto_file(
+                result["file"], 
+                result["start"]["line"], 
+                result["start"]["ch"],
+            )        
         return True
 
     @prevent_multiply_carrets
