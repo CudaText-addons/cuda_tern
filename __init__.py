@@ -230,6 +230,7 @@ class Command:
                 lineCharPositions=True,
                 types=True,
                 docs=True,
+                expandWordForward=False, #need when caret inside funcname
             ),
         ))
 
