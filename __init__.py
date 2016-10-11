@@ -16,6 +16,7 @@ CUDA_LEXER_IDENTIFIER = "Identifier"
 
 LOCALHOST = "127.0.0.1" if os.name=='nt' else "localhost"
 LINE_GOTO_OFFSET = 5 #lines from top
+CUDA_API_COMPLETE_NEW = app_api_version() >= '1.0.156'
 
 TERN_TIMEOUT = 3 #seconds
 TERN_PROCESS = None
@@ -137,12 +138,25 @@ class Command:
         rx = result["end"]["ch"]
         lines = []
         default = collections.ChainMap(dict(type="", name="", doc=""))
-        fmt = "{type}|{name}|\t{doc}"
+        
+        if CUDA_API_COMPLETE_NEW:
+            fmt = "{name}|{type}|\t{doc}"
+        else:
+            fmt = "{type}|{name}|\t{doc}"
+        
         for complete in map(default.new_child, result["completions"]):
 
             lines.append(str.format(fmt, **complete))
 
-        ed_self.complete(str.join("\n", lines), caret.ex - lx, rx - caret.ex)
+        par_text = str.join("\n", lines)
+        par_len1 = caret.ex - lx
+        par_len2 = rx - caret.ex
+        
+        if CUDA_API_COMPLETE_NEW:
+            ed_self.complete(par_text, par_len1, par_len2, 0, True)
+        else:
+            ed_self.complete(par_text, par_len1, par_len2)
+            
         return True
 
     @prevent_multiply_carrets
