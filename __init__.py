@@ -56,6 +56,7 @@ def do_request(data):
 
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     url = str.format("http://{}:{}/", LOCALHOST, TERN_PORT)
+    data["timeout"] = TERN_TIMEOUT * 1000
     s = json.dumps(data).encode("utf-8")
     req = opener.open(url, s, timeout=TERN_TIMEOUT)
     return json.loads(req.read().decode("utf-8"))
@@ -65,7 +66,7 @@ def do_goto_file(filename, num_line, num_col):
 
     if not filename:
         return
-    #print('Goto params: "%s", %d:%d' % (filename, num_line, num_col))
+    # print('Goto params: "%s", %d:%d' % (filename, num_line, num_col))
 
     # Tern gives "test/reload.js" while we edit "reload.js" in "test"
     dirname = get_project_dir()
@@ -76,7 +77,8 @@ def do_goto_file(filename, num_line, num_col):
         msg_box(
             'Tern: cannot find file:\n'+filename+'\n\n'
             'Install "Project Manager" plugin, and create/open some project. '
-            'Dir of this CudaText project file will be used as dir of JS project.',
+            'Dir of this CudaText project file will be used as dir of JS '
+            'project.',
             MB_OK+MB_ICONINFO
         )
         return
@@ -193,7 +195,6 @@ class Command:
                 result.get("start", {}).get("ch", 0),
             )
         return True
-
 
     def on_func_hint(self, ed_self):
 
