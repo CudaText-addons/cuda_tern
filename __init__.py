@@ -15,7 +15,6 @@ CUDA_LEXER_IDENTIFIER = "Identifier"
 
 LOCALHOST = "127.0.0.1" if os.name == "nt" else "localhost"
 LINE_GOTO_OFFSET = 5  # lines from top
-CUDA_API_COMPLETE_NEW = app_api_version() >= "1.0.156"
 
 TERN_TIMEOUT = 3  # seconds
 TERN_PROCESS = None
@@ -66,15 +65,20 @@ def do_goto_file(filename, num_line, num_col):
 
     if not filename:
         return
-
-    print('Goto params: "%s", %d:%d' % (filename, num_line, num_col))
+    #print('Goto params: "%s", %d:%d' % (filename, num_line, num_col))
 
     # Tern gives "test/reload.js" while we edit "reload.js" in "test"
-    dirname = os.path.dirname(os.path.dirname(ed.get_filename()))
+    dirname = get_project_dir()
     if dirname:
         filename = os.path.join(dirname, filename)
 
     if not os.path.isfile(filename):
+        msg_box(
+            'Tern: cannot find file:\n'+filename+'\n\n'
+            'Install "Project Manager" plugin, and create/open some project. '
+            'Dir of this CudaText project file will be used as dir of JS project.',
+            MB_OK+MB_ICONINFO
+        )
         return
 
     file_open(filename)
@@ -135,6 +139,16 @@ def get_word_lens():
     return (len1, len2)
 
 
+def get_project_dir():
+    #uses Project Manager plugin
+    try:
+        import cuda_project_man
+        fn = cuda_project_man.global_project_info.get('filename', '')
+        return os.path.dirname(fn)
+    except ImportError:
+        return
+
+
 class Command:
 
     def on_complete(self, ed_self):
@@ -155,23 +169,14 @@ class Command:
 
         lines = []
         default = collections.ChainMap(dict(type="", name="", doc=""))
-
-        if CUDA_API_COMPLETE_NEW:
-            fmt = "{name}|{type}|\t{doc}"
-        else:
-            fmt = "{type}|{name}|\t{doc}"
+        fmt = "|{name}|{type}|\t{doc}"
 
         for complete in map(default.new_child, result["completions"]):
 
             lines.append(str.format(fmt, **complete))
 
         par_text = str.join("\n", lines)
-
-        if CUDA_API_COMPLETE_NEW:
-            ed_self.complete(par_text, par_len1, par_len2, 0, True)
-        else:
-            ed_self.complete(par_text, par_len1, par_len2)
-
+        ed_self.complete(par_text, par_len1, par_len2)
         return True
 
     def on_goto_def(self, ed_self):
@@ -191,11 +196,11 @@ class Command:
 
 
     def on_func_hint(self, ed_self):
-    
+
         params = get_params()
         if not params:
             return
-            
+
         filename, text, caret = params
 
         tokens = collections.deque()
