@@ -19,7 +19,7 @@ LINE_GOTO_OFFSET = 5  # lines from top
 TERN_TIMEOUT = 3  # seconds
 TERN_PROCESS = None
 TERN_PORT = None
-
+TERN_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 def do_start_server():
 
@@ -54,11 +54,10 @@ def do_request(data):
     if not TERN_PORT:
         return
 
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     url = str.format("http://{}:{}/", LOCALHOST, TERN_PORT)
     data["timeout"] = TERN_TIMEOUT * 1000
     s = json.dumps(data).encode("utf-8")
-    req = opener.open(url, s, timeout=TERN_TIMEOUT)
+    req = TERN_OPENER.open(url, s) #, timeout=TERN_TIMEOUT)
     return json.loads(req.read().decode("utf-8"))
 
 
