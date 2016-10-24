@@ -253,6 +253,41 @@ class Command:
 
             msg_status_alt(hint, 10)
 
+    def get_docstring(self):
+
+        params = get_params()
+        if not params:
+            return
+
+        result = self.get_completes(*params)
+        if not result:
+            return
+
+        result = result["completions"]
+        if not result:
+            return
+
+        result = result[0]
+        print(result)
+        result1 = result.get("name", "?")+": "+result.get("type", "")
+        result2 = result.get("doc", "")
+        if not result2:
+            return
+
+        return result1+"\n"+result2
+
+    def show_docstr(self):
+
+        text = self.get_docstring()
+        if not text:
+            return
+
+        ed.cmd(cudatext_cmd.cmd_ShowPanelOutput)
+        app_log(LOG_SET_PANEL, LOG_PANEL_OUTPUT)
+        app_log(LOG_CLEAR, '')
+        for s in text.splitlines():
+            app_log(LOG_ADD, s)
+
     def show_usages(self):
 
         if len(ed.get_carets()) == 1:
