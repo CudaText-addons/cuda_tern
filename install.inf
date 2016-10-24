@@ -14,3 +14,8 @@ lexers=JavaScript
 section=commands
 caption=Tern\Show usages
 method=show_usages
+
+[item3]
+section=commands
+caption=Tern\Show doc-string
+method=show_docstr
