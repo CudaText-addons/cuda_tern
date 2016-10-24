@@ -1,4 +1,7 @@
 
+2016.10.24
++ cmd "show doc-string"
+
 2016.10.11
 + implemented most code
 
