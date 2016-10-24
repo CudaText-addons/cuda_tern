@@ -259,27 +259,25 @@ class Command:
         if not params:
             return
 
-        result = self.get_completes(*params)
-        if not result:
+        res = self.get_completes(*params)
+        if not res:
             return
 
-        result = result["completions"]
-        if not result:
+        res = res["completions"]
+        if not res:
             return
 
-        result = result[0]
-        print(result)
-        result1 = result.get("name", "?")+": "+result.get("type", "")
-        result2 = result.get("doc", "")
-        if not result2:
-            return
-
-        return result1+"\n"+result2
+        res = res[0]
+        r1 = res.get("name", "?")+": "+res.get("type", "?")
+        r2 = res.get("doc", "")
+        if r2:
+            return r1+"\n"+r2
 
     def show_docstr(self):
 
         text = self.get_docstring()
         if not text:
+            msg_status('Cannot find docstring')
             return
 
         ed.cmd(cudatext_cmd.cmd_ShowPanelOutput)
