@@ -19,3 +19,13 @@ method=show_usages
 section=commands
 caption=Tern\Show doc-string
 method=show_docstr
+
+[item20]
+section=commands
+caption=Tern\-
+method=_
+
+[item21]
+section=commands
+caption=Tern\Restart server
+method=restart_server
