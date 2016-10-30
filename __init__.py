@@ -5,6 +5,7 @@ import subprocess
 import urllib.request
 import collections
 import itertools
+import time
 
 from cudatext import *
 import cudatext_cmd
@@ -44,6 +45,29 @@ def do_start_server():
         TERN_PORT = int(match.group(1))
 
     print('Started Tern (port %d)' % TERN_PORT)
+
+
+def do_stop_server():
+
+    global TERN_PROCESS
+    global TERN_PORT
+
+    if TERN_PROCESS is None:
+        return
+    print('Stopping Tern..')
+    if TERN_PROCESS.stdin:
+        TERN_PROCESS.stdin.close()
+    TERN_PROCESS.terminate()
+    TERN_PROCESS = None
+    TERN_PORT = None
+    print('Stopped')
+
+
+def do_restart_server():
+
+    do_stop_server()
+    time.sleep(1)
+    do_start_server()
 
 
 def do_request(data):
@@ -151,6 +175,10 @@ def get_project_dir():
 
 
 class Command:
+
+    def restart_server(self):
+
+        do_restart_server()
 
     def on_complete(self, ed_self):
 
