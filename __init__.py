@@ -6,6 +6,7 @@ import urllib.request
 import collections
 import itertools
 import time
+import shutil
 
 from cudatext import *
 import cudatext_cmd
@@ -13,15 +14,6 @@ import cudatext_cmd
 
 CUDA_LEXER_SYMBOL = "Symbol"
 CUDA_LEXER_IDENTIFIER = "Identifier"
-DEFAULT_TERN_CONFIG = {
-    "libs": [],
-    "loadEagerly": [
-        "**/*.js"
-    ],
-    "plugins": {
-        "node": {}
-    }
-}
 
 LOCALHOST = "127.0.0.1" if os.name == "nt" else "localhost"
 LINE_GOTO_OFFSET = 5  # lines from top
@@ -115,13 +107,15 @@ class Tern:
             if self.project_directory and \
                     os.path.exists(self.project_directory):
 
-                project_file = os.path.join(
+                destination = os.path.join(
                     self.project_directory,
                     ".tern-project"
                 )
-                with open(project_file, "w", encoding="utf-8") as fout:
-
-                    json.dump(DEFAULT_TERN_CONFIG, fout, indent=4)
+                source = os.path.join(
+                    os.path.dirname(__file__),
+                    "tern-project.default",
+                )
+                shutil.copy(source, destination)
 
             self.start()
 
@@ -380,22 +374,22 @@ class Command:
         refs = self.get_references(*params)
         if not refs:
             return
-            
+
         refs = refs.get('refs', [])
         if not refs:
             return
-            
+
         text = '\n'.join(['%s\t%d' % (ref['file'], ref['start']['line']+1) for ref in refs])
         res = dlg_menu(MENU_LIST, text)
         if res is None:
             return
-            
+
         ref = refs[res]
         filename = ref['file']
         num_line = ref['start']['line']
         num_col = ref['start']['ch']
         do_goto_file(filename, num_line, num_col)
-        
+
 
     def get_completes(self, filename, text, caret):
 
