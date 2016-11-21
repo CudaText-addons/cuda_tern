@@ -3,8 +3,9 @@ Gives intelligence commands for JavaScript, using Tern engine, http://ternjs.net
 
 1) Auto-completion (Ctrl+Space)
 2) Go-to-definition (command item in editor context menu)
-3) Show function/class call-tip (Ctrl+Shift+Space, info will show at the editor bottom)
-4) Show function/class/var doc-string (comment above function definition, info will show in the Output panel)
+3) Show function call-tip (Ctrl+Shift+Space, info will show at the editor bottom)
+4) Show doc-string (comment above function/class/var definition, info will show in the Output panel)
+5) Show usages (list of places where name is used, with go-to after selecting item)
 
 ======================================
 First, you must install Node.js engine, then install Tern like this:
