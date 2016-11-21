@@ -13,76 +13,127 @@ import cudatext_cmd
 
 CUDA_LEXER_SYMBOL = "Symbol"
 CUDA_LEXER_IDENTIFIER = "Identifier"
+DEFAULT_TERN_CONFIG = {
+    "libs": [],
+    "loadEagerly": [
+        "**/*.js"
+    ],
+    "plugins": {
+        "node": {}
+    }
+}
 
 LOCALHOST = "127.0.0.1" if os.name == "nt" else "localhost"
 LINE_GOTO_OFFSET = 5  # lines from top
 
-TERN_TIMEOUT = 3  # seconds
-TERN_PROCESS = None
-TERN_PORT = None
-TERN_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
-def do_start_server():
+class Tern:
 
-    global TERN_PROCESS
-    global TERN_PORT
+    def __init__(self, timeout=3):
 
-    try:
-        TERN_PROCESS = subprocess.Popen(
-            ("tern", "--persistent", "--ignore-stdin", "--no-port-file"),
-            stdout=subprocess.PIPE,
-        )
-    except:
-        msg_box("Cannot start Tern process.\nMake sure Tern.js and Node.js "
+        self.timeout = timeout
+        self.process = None
+        self.port = None
+        self.project_directory = None
+        self.opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}))
+
+    def start(self):
+
+        if self.process:
+
+            self.stop()
+
+        try:
+
+            self.project_directory = get_project_dir()
+            self.process = subprocess.Popen(
+                ("tern", "--persistent", "--ignore-stdin", "--no-port-file"),
+                stdout=subprocess.PIPE,
+                cwd=self.project_directory,
+            )
+
+        except:
+
+            msg_box(
+                "Cannot start Tern process.\nMake sure Tern.js and Node.js "
                 "are installed.",
-                MB_OK + MB_ICONERROR)
-        return
+                MB_OK + MB_ICONERROR
+            )
+            self.stop()
+            import traceback
+            traceback.print_exc()
+            return
 
-    s = TERN_PROCESS.stdout.readline().decode("utf-8")
-    match = re.match("Listening on port (\\d+)", s)
-    if match:
+        s = self.process.stdout.readline().decode("utf-8")
+        match = re.match("Listening on port (\\d+)", s)
+        if match:
 
-        TERN_PORT = int(match.group(1))
+            self.port = int(match.group(1))
+            print('Started Tern (port %d)' % self.port)
 
-    print('Started Tern (port %d)' % TERN_PORT)
+        else:
 
+            self.port = None
+            msg_box(
+                str.format(
+                    "Can't start Tern process.\nCan't parse {!r} for port",
+                    s,
+                ),
+                MB_OK + MB_ICONERROR
+            )
+            self.stop()
 
-def do_stop_server():
+    def stop(self):
 
-    global TERN_PROCESS
-    global TERN_PORT
+        if not self.process:
 
-    if TERN_PROCESS is None:
-        return
-    print('Stopping Tern..')
-    if TERN_PROCESS.stdin:
-        TERN_PROCESS.stdin.close()
-    TERN_PROCESS.terminate()
-    TERN_PROCESS = None
-    TERN_PORT = None
-    print('Stopped')
+            return
 
+        print('Stopping Tern..')
+        if self.process.stdin:
 
-def do_restart_server():
+            self.process.stdin.close()
 
-    do_stop_server()
-    time.sleep(1)
-    do_start_server()
+        self.process.terminate()
+        self.process = None
+        self.port = None
+        print('Stopped')
 
+    def restart(self):
 
-def do_request(data):
+        self.stop()
+        time.sleep(1)
+        self.start()
 
-    global TERN_PORT
-    global TERN_TIMEOUT
+    def request(self, data):
 
-    if not TERN_PORT:
-        return
+        project_directory = get_project_dir()
+        if not self.process or project_directory != self.project_directory:
 
-    url = str.format("http://{}:{}/", LOCALHOST, TERN_PORT)
-    data["timeout"] = TERN_TIMEOUT * 1000
-    s = json.dumps(data).encode("utf-8")
-    req = TERN_OPENER.open(url, s) #, timeout=TERN_TIMEOUT)
-    return json.loads(req.read().decode("utf-8"))
+            self.project_directory = project_directory
+            if self.project_directory and \
+                    os.path.exists(self.project_directory):
+
+                project_file = os.path.join(
+                    self.project_directory,
+                    ".tern-project"
+                )
+                with open(project_file, "w", encoding="utf-8") as fout:
+
+                    json.dump(DEFAULT_TERN_CONFIG, fout, indent=4)
+
+            self.start()
+
+        if not self.process:
+
+            return
+
+        url = str.format("http://{}:{}/", LOCALHOST, self.port)
+        data["timeout"] = self.timeout * 1000
+        s = json.dumps(data).encode("utf-8")
+        req = self.opener.open(url, s)
+        return json.loads(req.read().decode("utf-8"))
 
 
 def do_goto_file(filename, num_line, num_col):
@@ -113,8 +164,6 @@ def do_goto_file(filename, num_line, num_col):
     msg_status('Goto file: ' + filename)
     print('Go to "%s", Line %d' % (filename, num_line + 1))
 
-
-do_start_server()
 
 Caret = collections.namedtuple("Caret", "sx sy ex ey")
 
@@ -165,10 +214,14 @@ def get_word_lens():
 
 
 def get_project_dir():
-    #uses Project Manager plugin
+    # uses Project Manager plugin
     try:
         import cuda_project_man
         fn = cuda_project_man.global_project_info.get('filename', '')
+        if not fn:
+
+            return
+
         return os.path.dirname(fn)
     except ImportError:
         return
@@ -176,9 +229,13 @@ def get_project_dir():
 
 class Command:
 
+    def __init__(self):
+
+        self.tern = Tern()
+
     def restart_server(self):
 
-        do_restart_server()
+        self.tern.restart()
 
     def on_complete(self, ed_self):
 
@@ -335,7 +392,7 @@ class Command:
 
     def get_completes(self, filename, text, caret):
 
-        return do_request(dict(
+        return self.tern.request(dict(
             files=[dict(
                 type="full",
                 name=filename,
@@ -357,7 +414,7 @@ class Command:
 
     def get_definition(self, filename, text, caret):
 
-        return do_request(dict(
+        return self.tern.request(dict(
             files=[dict(
                 type="full",
                 name=filename,
@@ -380,7 +437,7 @@ class Command:
 
     def get_calltip(self, filename, text, caret):
 
-        return do_request(dict(
+        return self.tern.request(dict(
             files=[dict(
                 type="full",
                 name=filename,
@@ -404,7 +461,7 @@ class Command:
 
     def get_references(self, filename, text, caret):
 
-        return do_request(dict(
+        return self.tern.request(dict(
             files=[dict(
                 type="full",
                 name=filename,
