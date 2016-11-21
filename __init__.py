@@ -373,22 +373,29 @@ class Command:
 
     def show_usages(self):
 
-        if len(ed.get_carets()) == 1:
+        params = get_params()
+        if not params:
+            return
 
-            caret, *_ = ed.get_carets()
-            filename = ed.get_filename()
-            text = ed.get_text_all()
-            par_len1, par_len2 = get_word_lens()
-            if par_len1 + par_len2 == 0:
-
-                return
-
-            result = self.get_references(
-                filename,
-                text,
-                normalize_caret(*caret),
-            )
-            print(result)
+        refs = self.get_references(*params)
+        if not refs:
+            return
+            
+        refs = refs.get('refs', [])
+        if not refs:
+            return
+            
+        text = '\n'.join(['%s\t%d' % (ref['file'], ref['start']['line']+1) for ref in refs])
+        res = dlg_menu(MENU_LIST, text)
+        if res is None:
+            return
+            
+        ref = refs[res]
+        filename = ref['file']
+        num_line = ref['start']['line']
+        num_col = ref['start']['ch']
+        do_goto_file(filename, num_line, num_col)
+        
 
     def get_completes(self, filename, text, caret):
 
