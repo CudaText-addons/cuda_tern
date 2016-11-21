@@ -1,6 +1,7 @@
 
 2016.11.21
-+ now completions should work with "require" js files. You must make "Proj Manager" project - see inf in readme.txt.
++ now commands should work with "require" js files. You must make "Proj Manager" project - see inf in readme.txt.
++ "show usages" command
 
 2016.10.24
 + cmd "show doc-string"
