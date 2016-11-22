@@ -20,6 +20,11 @@ section=commands
 caption=Tern\Show doc-string
 method=show_docstr
 
+[item4]
+section=commands
+caption=Tern\Open tern-project file
+method=open_tern_project_file
+
 [item20]
 section=commands
 caption=Tern\-

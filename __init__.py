@@ -390,6 +390,21 @@ class Command:
         num_col = ref['start']['ch']
         do_goto_file(filename, num_line, num_col)
 
+    def open_tern_project_file(self):
+
+        project_directory = get_project_dir()
+        if not project_directory:
+
+            msg_status("Project not opened")
+            return
+
+        tern_project_file = os.path.join(project_directory, ".tern-project")
+        if not os.path.exists(tern_project_file):
+
+            msg_status("Project have no '.tern-project' file")
+            return
+
+        file_open(tern_project_file)
 
     def get_completes(self, filename, text, caret):
 
