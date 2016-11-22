@@ -405,6 +405,7 @@ class Command:
             return
 
         file_open(tern_project_file)
+        ed.set_prop(PROP_LEXER_FILE, "json")
 
     def get_completes(self, filename, text, caret):
 
