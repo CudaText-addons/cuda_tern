@@ -283,13 +283,17 @@ class Command:
         filename, text, caret = params
 
         tokens = collections.deque()
+
+        # collect all lexer tokens from start to caret position.
+        # analyze "Symbol" tokens "(" and ")".
+        # calculate "depth" for them.
+        # when "Identifier" found with depth==0, we found function name.
         
         toks = ed_self.get_token(TOKEN_LIST_SUB, 0, caret.sy)
         if not toks:
             return
         for d in toks:
             x1 = d['x1']
-            x2 = d['x2']
             y1 = d['y1']
             if y1>caret.sy:
                 break
