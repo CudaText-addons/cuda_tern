@@ -4,6 +4,7 @@ desc=Gives intelligence commands for JavaScript: 1) auto-complete (Ctrl+Space), 
 type=cudatext-plugin
 subdir=cuda_tern
 homepage=https://github.com/pohmelie/cuda_tern
+api=1.0.249
 
 [item1]
 section=events
