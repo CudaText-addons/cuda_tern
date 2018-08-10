@@ -1,4 +1,7 @@
 
+2018.08.10
+- fix: avoid deprecated Cud API
+
 2016.11.21
 + now commands should work with "require" js files. You must make "Proj Manager" project - see inf in readme.txt.
 + cmd "show usages"

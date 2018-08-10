@@ -283,27 +283,31 @@ class Command:
         filename, text, caret = params
 
         tokens = collections.deque()
-        for i in itertools.count():
-
-            token = ed_self.get_token(TOKEN_INDEX, i, 0)
-            if token is None:
-
+        
+        toks = ed_self.get_token(TOKEN_LIST_SUB, 0, caret.sy)
+        if not toks:
+            return
+        for d in toks:
+            x1 = d['x1']
+            x2 = d['x2']
+            y1 = d['y1']
+            if y1>caret.sy:
                 break
-
-            (sx, sy), (ex, ey), *_ = token
-            tokens.append(token)
-            if caret.sy == sy and sx <= caret.sx <= ex:
-
+            if y1==caret.sy and x1>=caret.sx:
                 break
-
-            if (caret.ey, caret.ex) < (sy, sx):
-
-                return
+            tokens.append(d)
 
         depth = 1
         while tokens:
 
-            (sx, sy), (ex, ey), s, token_type = tokens.pop()
+            d = tokens.pop()
+            sx = d['x1']
+            sy = d['y1']
+            ex = d['x2']
+            ey = d['y2']
+            s = d['str']
+            token_type = d['style']
+            
             if token_type == CUDA_LEXER_SYMBOL:
 
                 if s == "(":
