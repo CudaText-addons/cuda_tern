@@ -1,4 +1,8 @@
 
+2018.08.31
+- fix: avoid deprecated API
++ nicer message in status
+
 2018.08.10
 - fix: avoid deprecated CudaText API
 
