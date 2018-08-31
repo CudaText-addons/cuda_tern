@@ -155,7 +155,7 @@ def do_goto_file(filename, num_line, num_col):
     ed.set_prop(PROP_LINE_TOP, str(max(0, num_line - LINE_GOTO_OFFSET)))
     ed.set_caret(num_col, num_line)
 
-    msg_status('Goto file: ' + filename)
+    msg_status('Tern: Go to file: ' + filename)
     print('Go to "%s", Line %d' % (filename, num_line + 1))
 
 
@@ -364,14 +364,14 @@ class Command:
 
         text = self.get_docstring()
         if not text:
-            msg_status('Cannot find docstring')
+            msg_status('Tern: Cannot find doc-string')
             return
 
         ed.cmd(cudatext_cmd.cmd_ShowPanelOutput)
-        app_log(LOG_SET_PANEL, LOG_PANEL_OUTPUT)
-        app_log(LOG_CLEAR, '')
+
+        app_log(LOG_CLEAR, '', panel=LOG_PANEL_OUTPUT)
         for s in text.splitlines():
-            app_log(LOG_ADD, s)
+            app_log(LOG_ADD, s, panel=LOG_PANEL_OUTPUT)
 
     def show_usages(self):
 
@@ -403,13 +403,13 @@ class Command:
         project_directory = get_project_dir()
         if not project_directory:
 
-            msg_status("Project not opened")
+            msg_status("Tern: Project not opened")
             return
 
         tern_project_file = os.path.join(project_directory, ".tern-project")
         if not os.path.exists(tern_project_file):
 
-            msg_status("Project have no '.tern-project' file")
+            msg_status("Tern: Project has no '.tern-project' file")
             return
 
         file_open(tern_project_file)
