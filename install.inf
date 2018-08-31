@@ -13,25 +13,25 @@ lexers=JavaScript
 
 [item2]
 section=commands
-caption=Tern\Show usages
+caption=JS Tern\Show usages
 method=show_usages
 
 [item3]
 section=commands
-caption=Tern\Show doc-string
+caption=JS Tern\Show doc-string
 method=show_docstr
 
 [item20]
 section=commands
-caption=Tern\-
+caption=JS Tern\-
 method=_
 
 [item21]
 section=commands
-caption=Tern\Restart server
+caption=JS Tern\Restart server
 method=restart_server
 
 [item25]
 section=commands
-caption=Tern\Open tern-project file
+caption=JS Tern\Open tern-project file
 method=open_tern_project_file
