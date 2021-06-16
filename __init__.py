@@ -387,8 +387,8 @@ class Command:
         if not refs:
             return
 
-        text = '\n'.join(['%s\t%d' % (ref['file'], ref['start']['line']+1) for ref in refs])
-        res = dlg_menu(MENU_LIST, text)
+        items = ['%s\t%d' % (ref['file'], ref['start']['line']+1) for ref in refs]
+        res = dlg_menu(DMENU_LIST, items, caption='Usages')
         if res is None:
             return
 
