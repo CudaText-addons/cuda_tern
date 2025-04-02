@@ -1,3 +1,5 @@
+2025.04.02
+- fix: plugin did not work on Windows
 
 2018.08.31
 - fix: avoid deprecated API
