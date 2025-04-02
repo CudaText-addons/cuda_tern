@@ -1,6 +1,9 @@
 {
-    "nodes": [
-        "/home/user/test/bar.js",
-        "/home/user/test/foo.js"
-    ]
+  "nodes": [
+    "{ProjDir}/bar.js",
+    "{ProjDir}/foo.js"
+  ],
+  "vars": [],
+  "mainfile": "",
+  "unfold": []
 }
