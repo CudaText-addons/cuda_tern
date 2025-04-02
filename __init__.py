@@ -37,19 +37,23 @@ class Tern:
             self.stop()
 
         try:
-
+            if os.name=='nt':
+                exe = ['cmd.exe', '/c', 'tern.cmd']
+            else:
+                exe = ['tern']
+            
             self.project_directory = get_project_dir()
             self.process = subprocess.Popen(
-                ("tern", "--persistent", "--ignore-stdin", "--no-port-file"),
+                exe + ["--persistent", "--ignore-stdin", "--no-port-file"],
                 stdout=subprocess.PIPE,
                 cwd=self.project_directory,
             )
 
-        except:
+        except Exception as e:
 
             msg_box(
                 "Cannot start Tern process.\nMake sure Tern.js and Node.js "
-                "are installed.",
+                "are installed.\n"+str(e),
                 MB_OK + MB_ICONERROR
             )
             self.stop()
