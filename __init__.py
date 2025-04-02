@@ -17,7 +17,7 @@ CUDA_LEXER_IDENTIFIER = "Identifier"
 
 LOCALHOST = "127.0.0.1" if os.name == "nt" else "localhost"
 LINE_GOTO_OFFSET = 5  # lines from top
-
+IS_WIN = os.name=='nt'
 
 class Tern:
 
@@ -33,21 +33,28 @@ class Tern:
     def start(self):
 
         if self.process:
-
             self.stop()
 
+        self.project_directory = get_project_dir()
+        params = ["--persistent", "--ignore-stdin", "--no-port-file"]
+
         try:
-            if os.name=='nt':
-                exe = ['cmd.exe', '/c', 'tern.cmd']
+            if IS_WIN:
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+                self.process = subprocess.Popen(
+                    ['cmd.exe', '/c', 'tern.cmd'] + params,
+                    stdout=subprocess.PIPE,
+                    cwd=self.project_directory,
+                    startupinfo=startupinfo,
+                    )
             else:
-                exe = ['tern']
-            
-            self.project_directory = get_project_dir()
-            self.process = subprocess.Popen(
-                exe + ["--persistent", "--ignore-stdin", "--no-port-file"],
-                stdout=subprocess.PIPE,
-                cwd=self.project_directory,
-            )
+                self.process = subprocess.Popen(
+                    ['tern'] + params,
+                    stdout=subprocess.PIPE,
+                    cwd=self.project_directory,
+                    )
 
         except Exception as e:
 
